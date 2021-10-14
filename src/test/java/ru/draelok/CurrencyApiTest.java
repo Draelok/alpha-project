@@ -1,11 +1,17 @@
 package ru.draelok;
 
+import feign.Feign;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.draelok.currency.CurrencyAPI;
 import ru.draelok.gifs.GifAPI;
+import ru.draelok.gifs.ImageDataAPI;
 
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -49,6 +55,14 @@ public class CurrencyApiTest {
         assertNotNull(data);
     }
 
+    @Test
+    void getImageData(){
+        ImageDataAPI imageDataAPI = Feign.builder()
+                .client(new OkHttpClient())
+                .target(ImageDataAPI.class, "https://media1.giphy.com/media/cZ7rmKfFYOvYI/200.gif");
 
+        var data = imageDataAPI.getImageData();
 
+        assertNotNull(data);
+    }
 }

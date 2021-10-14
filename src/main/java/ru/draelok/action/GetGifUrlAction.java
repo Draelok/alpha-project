@@ -1,5 +1,9 @@
 package ru.draelok.action;
 
+import feign.Feign;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +13,9 @@ import org.springframework.stereotype.Component;
 import ru.draelok.currency.CurrencyAPI;
 import ru.draelok.currency.CurrencyData;
 import ru.draelok.gifs.GifAPI;
+import ru.draelok.gifs.ImageDataAPI;
 
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -43,12 +49,20 @@ public class GetGifUrlAction {
         return dateFormat.format(cal.getTime());
     }
 
-    private String getQuery(){
+    private String getQuery() throws CurrencyDataError {
         CurrencyData data = currencyAPI.getLatest(currencyAppID);
         CurrencyData hData = currencyAPI.getHistory(getYesterdayDate(), currencyAppID);
 
-        Double num = data.getRates().get(currencyName);
-        Double hNum = hData.getRates().get(currencyName);
+        Double rub = data.getRates().get("RUB");
+        if(rub == null || rub == 0.)
+            throw new CurrencyDataError();
+
+        Double hRub = data.getRates().get("RUB");
+        if(hRub == null || hRub == 0.)
+            throw new CurrencyDataError();
+
+        double num = data.getRates().get(currencyName) / rub;
+        double hNum = hData.getRates().get(currencyName) / hRub;
 
         return num > hNum ? "rich" : "broke";
     }
@@ -58,9 +72,21 @@ public class GetGifUrlAction {
         return random.nextInt(max);
     }
 
-    public String exec(){
+    public byte[] exec() throws CurrencyDataError{
         var data = gifAPI.getGifImage(getQuery(), gifAppID).getData();
 
-        return data[getRandNum(data.length)].getUrl();
+        String url = data[getRandNum(data.length)].getImages().getFixedHeight().getUrl();
+
+        ImageDataAPI imageDataAPI = Feign.builder()
+                .client(new OkHttpClient())
+                .target(ImageDataAPI.class, url);
+
+        return imageDataAPI.getImageData();
+    }
+
+    public static class CurrencyDataError extends Exception{
+        public CurrencyDataError(){
+            super("Get data error");
+        }
     }
 }
