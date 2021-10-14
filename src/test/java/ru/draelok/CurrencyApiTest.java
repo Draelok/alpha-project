@@ -1,17 +1,14 @@
 package ru.draelok;
 
 import feign.Feign;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.draelok.currency.CurrencyAPI;
-import ru.draelok.gifs.GifAPI;
-import ru.draelok.gifs.ImageDataAPI;
+import ru.draelok.gifs.api.GifAPI;
+import ru.draelok.gifs.api.ImageDataAPI;
 
-import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

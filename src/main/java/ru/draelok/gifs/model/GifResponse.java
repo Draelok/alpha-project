@@ -1,4 +1,4 @@
-package ru.draelok.gifs;
+package ru.draelok.gifs.model;
 
 import lombok.Data;
 

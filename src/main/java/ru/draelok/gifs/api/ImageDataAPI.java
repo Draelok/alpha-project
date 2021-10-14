@@ -1,10 +1,7 @@
-package ru.draelok.gifs;
+package ru.draelok.gifs.api;
 
 import feign.Headers;
-import feign.Param;
 import feign.RequestLine;
-
-import java.net.URI;
 
 public interface ImageDataAPI {
     @RequestLine("GET")

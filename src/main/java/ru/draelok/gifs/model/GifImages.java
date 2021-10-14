@@ -1,4 +1,4 @@
-package ru.draelok.gifs;
+package ru.draelok.gifs.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
