@@ -30,6 +30,12 @@ public class GetGifUrlAction {
     @Autowired
     private CurrencyAPI currencyAPI;
 
+    private ImageDataAPI imageDataAPI;
+
+    public void setImageDataAPI(ImageDataAPI imageDataAPI){
+        this.imageDataAPI = imageDataAPI;
+    }
+
     private final static Logger log = LoggerFactory.getLogger(GetGifUrlAction.class);
 
     @Value("${draelok.currencyAPI.appID}")
@@ -50,18 +56,19 @@ public class GetGifUrlAction {
         CurrencyData data = currencyAPI.getLatest(currencyAppID);
         CurrencyData hData = currencyAPI.getHistory(getYesterdayDate(), currencyAppID);
 
+        return getRate(data) > getRate(hData) ? "rich" : "broke";
+    }
+
+    private double getRate(CurrencyData data) throws CurrencyDataError {
         Double rub = data.getRates().get("RUB");
         if(rub == null || rub == 0.)
             throw new CurrencyDataError();
 
-        Double hRub = data.getRates().get("RUB");
-        if(hRub == null || hRub == 0.)
+        Double rates = data.getRates().get(currencyName);
+        if(rates == null)
             throw new CurrencyDataError();
 
-        double num = data.getRates().get(currencyName) / rub;
-        double hNum = hData.getRates().get(currencyName) / hRub;
-
-        return num > hNum ? "rich" : "broke";
+        return rates / rub;
     }
 
     private int getRandNum(int max) {
@@ -69,14 +76,19 @@ public class GetGifUrlAction {
         return random.nextInt(max);
     }
 
+    private ImageDataAPI getImageDataAPI(String url){
+        return Feign.builder()
+                .client(new OkHttpClient())
+                .target(ImageDataAPI.class, url);
+    }
+
     public byte[] exec() throws CurrencyDataError{
         var data = gifAPI.getGifImage(getQuery(), gifAppID).getData();
 
         String url = data[getRandNum(data.length)].getImages().getFixedHeight().getUrl();
 
-        ImageDataAPI imageDataAPI = Feign.builder()
-                .client(new OkHttpClient())
-                .target(ImageDataAPI.class, url);
+        if(imageDataAPI == null)
+            return getImageDataAPI(url).getImageData();
 
         return imageDataAPI.getImageData();
     }
